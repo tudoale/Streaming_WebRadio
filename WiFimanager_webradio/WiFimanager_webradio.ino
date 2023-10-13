@@ -37,16 +37,20 @@ Audio audio;
 
 // Endereço do Streaming Web
 char* streaming = "http://listen.livestreamingservice.com/181-themix_128k.mp3";
+char* nova;
 
 //flag para indicar se foi salva uma nova configuração de rede
 bool shouldSaveConfig = false;
 
 //pino do botão
 const int PIN_AP = 2;
+const int BT_TROCA = 5;
 
 void setup() {
   Serial.begin(9600);
   pinMode(PIN_AP, INPUT);
+  pinMode(BT_TROCA, INPUT);
+
   //declaração do objeto wifiManager
   WiFiManager wifiManager;
 
@@ -101,6 +105,31 @@ void setup() {
 
 }
 
+void troca() {
+  HTTPClient http;
+String url = "https://gabd.com.br/tudoale/musica.php";
+http.begin(url);
+int httpCode = http.GET();                                        //Make the request
+  
+    if (httpCode > 0) { //Check for the returning code
+  
+        String payload = http.getString();
+        if(payload != streaming)  {
+          Serial.println(payload);
+          int str_len = payload.length() + 1;
+          // Prepare the character array (the buffer) 
+          char nova[str_len];
+          payload.toCharArray(nova, str_len);          
+          //streaming = nova;
+          audio.connecttohost(nova);
+          Serial.println(nova);
+        }
+        //audio.connecttohost(payload);
+    }
+    http.end(); //Free the resources
+    delay(5000);
+}
+
 void loop() {
   WiFiManager wifiManager;
   //se o botão foi pressionado
@@ -115,24 +144,10 @@ void loop() {
       Serial.println("Conectou ESP_AP!!!");
    }
 
-// HTTPClient http;
-// String url = "https://gabd.com.br/tudoale/musica.php";
-// http.begin(url);
-// int httpCode = http.GET();                                        //Make the request
-  
-//     if (httpCode > 0) { //Check for the returning code
-  
-//         String payload = http.getString();
-//         if(payload != streaming)  {
-//           char* nova;
-//           payload.toCharArray(nova, 100);
-//           streaming = nova;
-//           audio.connecttohost(nova);
-//           Serial.println("Entoru aqaui");
-//         }
-//         //audio.connecttohost(payload);
-//     }
-//     http.end(); //Free the resources    
+  //se o botão foi pressionado
+    if (digitalRead(BT_TROCA) == LOW) {
+      troca();
+    }
 
 // Run audio player
 // Run audio player______________________________________________________________-Play Audio
